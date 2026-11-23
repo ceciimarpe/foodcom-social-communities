@@ -1,0 +1,11 @@
+# Raw data (≈600 MB, download from Kaggle into data/)
+data/
+food_com_recipes/
+*.csv
+# ...but keep the hand-labelling files
+!hand_labels*.csv
+# Python / Jupyter / OS
+__pycache__/
+.ipynb_checkpoints/
+*.pyc
+.DS_Store

@@ -1,0 +1,144 @@
+% 02805 Social Graphs and Interactions — Final Project
+% PNAS-style template (replace \author fields with your names)
+\documentclass[9pt,twocolumn]{pnas-new}
+
+\templatetype{pnasresearcharticle}
+
+\title{Culinary Communities: Network Structure and Linguistic Fingerprints in the Food.com Recipe Graph}
+
+\author[a,1]{Ali Afif}
+\author[a]{Group Member 2}
+\author[a]{Group Member 3}
+
+\affil[a]{Technical University of Denmark, DTU Compute, Kongens Lyngby, Denmark}
+
+\leadauthor{Afif}
+
+\significancestatement{%
+Every dish is a network of ingredients. We show that 500 common ingredients on Food.com---the web's largest recipe platform---organize into three culinary communities (Savory, Baking, and Asian) whose boundaries emerge from which ingredients appear together, not from any explicit label. These communities predict the vocabulary cooks use when writing recipes: baking instructions mention ovens and dough, savory instructions mention garlic and cheese, and Asian instructions mention soy and boiling. Remarkably, all three communities produce equally enjoyed recipes, suggesting that culinary tradition shapes how we cook and talk about food---but not whether we like the result.%
+}
+
+\authorcontributions{%
+A.A. built the network, ran community detection, and wrote the Results section. G.M.2 performed the TF-IDF and VADER sentiment analyses and wrote the Methods section. G.M.3 designed the figures, ran the validation checks, and wrote the Introduction and Discussion.%
+}
+
+\authordeclaration{The authors declare no competing interest.}
+
+\equalauthors{\textsuperscript{1}To whom correspondence should be addressed. E-mail: aliafif@ymail.com}
+
+\keywords{food networks | ingredient co-occurrence | community detection | natural language processing | recipe analysis}
+
+\begin{abstract}
+We analyse the Food.com dataset---87,313 recipes with over one million user reviews---through the lens of network science and natural language processing. We build a weighted ingredient co-occurrence network of the 500 most frequent ingredients, with an edge between any two ingredients that appear together in at least five recipes. Louvain community detection reveals three culinary communities: Savory (307 nodes), Baking (156 nodes), and Asian (37 nodes), with modularity $Q = 0.218$ ($z = 60$ against a label-shuffle null). Community membership aligns significantly with recipe cuisine tags (NMI $= 0.49$). TF-IDF analysis of cooking-step text reveals community-specific vocabularies: baking steps emphasize \textit{bake}, \textit{oven}, \textit{butter}, and \textit{dough}; savory steps emphasize \textit{garlic}, \textit{cheese}, and \textit{pepper}; Asian steps emphasize \textit{soy}, \textit{ginger}, and \textit{boil}. Despite these structural and linguistic differences, mean recipe ratings are statistically indistinguishable across communities ($4.65 \pm 0.40$; $F = 2.87$, $p = 0.057$). Betweenness centrality identifies cross-cultural bridge ingredients: \textit{ground ginger} (classified as Baking) and \textit{cornstarch} (classified as Asian) link the most distinct culinary traditions.
+\end{abstract}
+
+\dates{This manuscript was submitted to 02805 Social Graphs and Interactions, DTU, Fall 2026.}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{firststyle}
+\ifthenelse{\boolean{shortarticle}}{\ifthenelse{\boolean{singlecolumn}}{\abscontentformatted}{\abscontent}}{}
+
+%% ---- INTRODUCTION ----
+\section*{Introduction}
+
+Food is a network. Every recipe is a set of ingredients that co-appear by design, and the structure of which ingredients appear together encodes centuries of culinary tradition, agricultural geography, and cultural exchange. Ahn et al.~\cite{ahn2011flavor} showed that Western cuisines tend to pair ingredients that share flavour compounds, while East Asian cuisines avoid such pairings---a signal visible in the network of ingredient co-occurrence. The Food.com dataset, originally studied by Majumder et al.~\cite{majumder2019generating} in the context of recipe generation, offers 231,637 recipes and 1.1 million reviews accumulated since 2000, making it one of the richest publicly available cooking corpora.
+
+We ask two related questions. First, \textit{what community structure emerges from ingredient co-occurrence, and does it correspond to recognizable culinary traditions?} Second, \textit{does community membership shape the language cooks use to write about their recipes?} Prior work has studied recipe networks to predict ratings~\cite{teng2012recipe} or suggest substitutions~\cite{shirai2021recipe}, but the interplay between network structure and linguistic community fingerprints has received little systematic attention.
+
+We approach both questions with the full toolkit of the course: Louvain community detection validated against a null model and against external cuisine labels (NMI), TF-IDF to extract community-specific vocabulary from cooking steps, VADER sentiment analysis validated against star ratings ($\kappa = 0.41$), and betweenness centrality to identify ingredients that bridge culinary worlds.
+
+%% ---- RESULTS ----
+\section*{Results}
+
+\subsection*{The ingredient co-occurrence network}
+
+We build a weighted undirected network whose nodes are the 500 most frequent ingredients across 87,313 recipes (those with at least 3 reviews). We place an edge between two ingredients when they appear together in at least 5 recipes, weighting each edge by that co-occurrence count. The resulting network has 500 nodes and 47,331 edges (density $= 0.379$). The high density reflects that common pantry staples---salt, butter, oil---co-occur with virtually every other ingredient, connecting all major clusters.
+
+\subsection*{Three culinary communities}
+
+Louvain community detection \cite{blondel2008fast} on the weighted network consistently yields three communities across repeated runs: a large \textbf{Savory} cluster (307 nodes; onion, olive oil, garlic, parmesan, pepper), a medium \textbf{Baking} cluster (156 nodes; salt, butter, sugar, eggs, flour, baking powder), and a small \textbf{Asian} cluster (37 nodes; soy sauce, sesame oil, ginger, cornstarch, rice vinegar). Figure~\ref{fig:network} shows the top-120 nodes coloured by community.
+
+The observed modularity $Q = 0.218$ is far above the null expectation. We validate this by shuffling node labels 100 times while preserving the graph structure, yielding a null modularity of $-0.005 \pm 0.004$ ($z = 60.0$, $p \ll 10^{-4}$). The null is negative because random partitions assign high-weight edges to between-community positions; the positive observed $Q$ confirms that the Louvain communities are genuinely cohesive.
+
+As an external check, we assign each recipe to its plurality community (the community containing the most of its filtered ingredients) and compare with cuisine labels extracted from recipe tags (Asian, Baking, Savory). The normalized mutual information between network community and cuisine tag is NMI $= 0.49$, against a permutation null of NMI $= 0.00$ ($z > 10^4$). The alignment is imperfect because many recipes span traditions---a spiced cake contains both Baking and Asian spices---but the correspondence is strong.
+
+\subsection*{Community-specific vocabulary in cooking steps}
+
+Each community leaves a linguistic signature in how cooks write their recipe steps. We build one TF-IDF document per community from a random sample of 3,000 recipes per community, using cooking-step text with generic stop words removed. Figure~\ref{fig:tfidf} shows the top discriminating words.
+
+The separation is clear and interpretable. Baking steps are dominated by \textit{bake}, \textit{oven}, \textit{butter}, \textit{flour}, \textit{dough}, \textit{cool}, and \textit{beat}: process words that reflect the precision of baking chemistry. Savory steps emphasize \textit{garlic}, \textit{cheese}, \textit{pepper}, \textit{salt}, and \textit{onion}: ingredient references reflecting the layered flavouring of Mediterranean cooking. Asian steps are defined by \textit{sauce}, \textit{soy}, \textit{ginger}, \textit{sesame}, \textit{rice}, and \textit{boil}: terms pointing to sauce-based, high-heat techniques. This vocabulary split shows that the structural communities defined by co-occurrence also organize language differently---a cross-network/NLP result consistent with the ``networks $\times$ language'' framework of the course.
+
+\subsection*{Bridge ingredients and cross-cultural connectors}
+
+We compute betweenness centrality on the full network using a sample of $k = 200$ node pairs (Figure~\ref{fig:betweenness}). The most central bridge ingredients are \textit{ground ginger} (Baking, $b = 8.8 \times 10^{-3}$), \textit{lemon} (Savory, $b = 8.5 \times 10^{-3}$), and \textit{hot water} (Baking, $b = 7.5 \times 10^{-3}$). \textit{Cornstarch} (Asian, $b = 6.5 \times 10^{-3}$) is the top Asian bridge ingredient: it appears in both Asian stir-fries and Western sauces and gravies.
+
+The finding for ground ginger is particularly revealing. Despite being classified into the Baking community (where it appears in gingerbread, spice cakes, and cookies), it has the highest betweenness of any node---meaning it lies on the most shortest paths between pairs of nodes across all communities. Ground ginger bridges Western baking and Asian spice-based cooking in a way no other ingredient does. This kind of cross-cultural role is invisible from ingredient lists alone and only emerges from the network's global structure.
+
+\subsection*{Community membership does not predict recipe enjoyment}
+
+Despite structural and linguistic differences, all three communities produce essentially the same recipe experience. Mean ratings are $4.659 \pm 0.374$ (Savory), $4.653 \pm 0.415$ (Baking), and $4.650 \pm 0.383$ (Asian); a one-way ANOVA gives $F = 2.87$, $p = 0.057$---not significant at the 5\% level. We validated our sentiment measure (VADER applied to review text) against star ratings on a 4,763-review binary sample (positive/negative), finding Cohen's $\kappa = 0.41$ (moderate agreement), consistent with the well-known finding that VADER underestimates sentiment in highly positive corpora~\cite{hutto2014vader}. The absence of a rating difference is itself a finding: the structural and linguistic partitions reflect \textit{culinary tradition}, not recipe quality.
+
+%% ---- DISCUSSION ----
+\section*{Discussion}
+
+Our results show that the ingredient space of Food.com is not flat. It partitions into three communities that correspond to recognizable culinary traditions, produce community-specific cooking language, and identify cross-cultural bridge ingredients. The finding that ground ginger is the network's top bridge---a spice shared between gingerbread and stir-fries---is the kind of result that could not have been anticipated without measuring the global structure.
+
+Several limitations bear noting. The edge threshold of 5 co-occurrences prunes rare pairings that might carry culturally specific signal, particularly for less common cuisines (Middle Eastern, Indian, Latin) that have few representatives in our top-500 node set. The Asian community (37 nodes) is notably smaller than Savory (307 nodes) and Baking (156 nodes), partly because soy-based ingredients are less frequent on a predominantly English-language platform. Our recipe-to-community assignment by plurality may misclassify fusion dishes. The TF-IDF analysis treats each community as a single document, losing within-community heterogeneity. And VADER's $\kappa = 0.41$ on a star-rating proxy means we cannot draw strong conclusions from sentiment differences (which are, in any case, absent).
+
+The null result on ratings deserves a positive interpretation. Food.com users enjoy baking, savory cooking, and Asian cooking equally. The network structure and the language of cooking instructions are rich with cultural content, but that content does not translate into differential enjoyment---all culinary traditions are equally good.
+
+%% ---- METHODS ----
+\section*{Methods}
+
+\paragraph{Data.}
+We use the publicly available Food.com Recipes and Interactions dataset~\cite{majumder2019generating}. We retain the 87,313 recipes with at least 3 reviews (after discarding 0-rated interactions, which indicate no rating was given in the original platform). Reviews total 1,071,520 after this filter.
+
+\paragraph{Network construction.}
+Ingredients are parsed from their string-list representation. We identify the 500 most frequent ingredients across all recipes; each recipe's ingredient list is then filtered to this set. For every pair of filtered ingredients that co-appear in a recipe, we increment an edge counter. Edges with fewer than 5 co-occurrences are pruned. We retain the largest connected component (500 nodes, 47,331 edges). Edge weight equals co-occurrence count.
+
+\paragraph{Community detection.}
+We run Louvain community detection~\cite{blondel2008fast} ten times with different random seeds and select the partition with the highest modularity (best $Q = 0.218$). Communities are labelled by identifying their dominant ingredients: a community containing soy sauce and sesame oil is Asian; one containing sugar, flour, and baking powder is Baking; the remaining community is Savory.
+
+\paragraph{Null model.}
+We validate community structure by shuffling node labels 100 times while holding the graph fixed, recomputing modularity each time. This tests whether the Louvain partition assigns high-weight edges to within-community positions more than expected by chance. We report the z-score of the observed $Q$ against this null.
+
+\paragraph{External validation (NMI).}
+We assign each recipe to its plurality community (the community containing the most of its filtered ingredients). We label recipes using their Food.com tag lists: a recipe tagged with any of \{asian, chinese, japanese, korean, thai\} is Asian; any of \{baking, cake, cookie, dessert, pastry, muffin, pie\} is Baking; any of \{main-dish, chicken, beef, pasta, soup, stew\} is Savory. We compute NMI between community assignment and tag label, validating with a permutation null (200 shuffles of tag labels).
+
+\paragraph{TF-IDF linguistic analysis.}
+We sample up to 3,000 recipes per community, concatenate their cooking-step text into one document per community, and fit a TF-IDF vectorizer (unigrams, 8,000 features, English stop words plus 20 domain-generic cooking verbs removed). The top discriminating words per community are shown in Figure~\ref{fig:tfidf}.
+
+\paragraph{Betweenness centrality.}
+We compute normalized betweenness centrality~\cite{brandes2001faster} using a $k = 200$ node sample, which is fast and accurate for dense networks of this size.
+
+\paragraph{Sentiment analysis.}
+We apply VADER~\cite{hutto2014vader} to review text. We validate against star ratings on 5,000 randomly sampled reviews: treating ratings $\geq 4$ as positive and $\leq 2$ as negative (dropping 3-star neutral), and VADER compound $\geq 0.05$ as positive and $\leq -0.05$ as negative, we find Cohen's $\kappa = 0.41$ on 4,763 non-neutral pairs. VADER's moderate agreement reflects the strong positive skew of Food.com reviews (76\% five-star).
+
+%% ---- REFERENCES ----
+\bibliography{references}
+
+%% ---- FIGURES ----
+\begin{figure}[htb]
+\centering
+\includegraphics[width=\linewidth]{fig1_network.pdf}
+\caption{\textbf{Ingredient co-occurrence network.} The 120 highest-degree nodes are shown; node size scales with weighted degree. Colors denote Louvain communities: Savory (blue, 307 nodes), Baking (orange, 156 nodes), and Asian (green, 37 nodes). The network modularity is $Q = 0.218$ ($z = 60.0$ vs. label-shuffle null, $p \ll 10^{-4}$). The Savory community dominates the network periphery; the Baking community forms a dense central cluster (salt, butter, sugar, eggs, flour); the Asian community is a compact, isolated group anchored by soy sauce and sesame oil.}
+\label{fig:network}
+\end{figure}
+
+\begin{figure}[htb]
+\centering
+\includegraphics[width=\linewidth]{fig2_tfidf.pdf}
+\caption{\textbf{Linguistic fingerprints of culinary communities.} TF-IDF scores (row-normalized) for the top discriminating words extracted from cooking-step text, one document per community (3,000 recipe sample). Each community is characterized by distinct vocabulary: the Asian community is defined by sauce-based and boiling techniques (\textit{sauce, water, boil, ginger, sesame, rice}); the Baking community by oven-centered procedures (\textit{sugar, bake, butter, oven, flour, dough, cool, beat}); the Savory community by ingredient references (\textit{garlic, cheese, pepper, salt, onion}). Generic cooking verbs (stir, mix, add, heat) were removed before fitting.}
+\label{fig:tfidf}
+\end{figure}
+
+\begin{figure}[htb]
+\centering
+\includegraphics[width=\linewidth]{fig3_betweenness.pdf}
+\caption{\textbf{Betweenness centrality and bridge ingredients.} \textbf{(A)} Distribution of betweenness centrality (×$10^{-3}$) across nodes in each community. Medians are similar; the Baking community has the heaviest tail, suggesting that many baking-specific ingredients also appear in other traditions. \textbf{(B)} The 15 highest-betweenness ingredients. \textit{Ground ginger} (Baking) has the highest centrality despite belonging to the Baking community---it appears in gingerbread and spice cakes as well as Asian stir-fries and marinades. \textit{Cornstarch} (Asian) bridges Asian thickening techniques with Western sauces and gravies.}
+\label{fig:betweenness}
+\end{figure}
+
+\end{document}
